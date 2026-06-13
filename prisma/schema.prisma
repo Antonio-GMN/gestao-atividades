@@ -39,4 +39,5 @@ model Task {
   createdAt       DateTime   @default(now())
   assignedUserId  String?
   assignedUser    User?      @relation(fields: [assignedUserId], references: [id])
+  sortOrder       Int        @default(0)
 }

@@ -85,3 +85,20 @@ export async function deleteTask(id: string) {
   await prisma.task.delete({ where: { id } })
   revalidatePath("/")
 }
+
+export async function reorderTasks(
+  updates: { id: string; status?: "TODO" | "IN_PROGRESS" | "DONE"; sortOrder: number }[],
+) {
+  await prisma.$transaction(
+    updates.map((u) =>
+      prisma.task.update({
+        where: { id: u.id },
+        data: {
+          sortOrder: u.sortOrder,
+          ...(u.status ? { status: u.status } : {}),
+        },
+      }),
+    ),
+  )
+  revalidatePath("/")
+}

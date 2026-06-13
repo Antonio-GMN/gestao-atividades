@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic"
 export default async function KanbanPage() {
   const tasks = await prisma.task.findMany({
     include: { assignedUser: true },
-    orderBy: { dueDate: "asc" },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
   })
 
   return (
