@@ -40,4 +40,5 @@ model Task {
   assignedUserId  String?
   assignedUser    User?      @relation(fields: [assignedUserId], references: [id])
   sortOrder       Int        @default(0)
+  estimatedHours  Int
 }

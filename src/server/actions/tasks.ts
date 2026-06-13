@@ -23,6 +23,7 @@ export async function createTask(formData: FormData) {
       priority: parsed.priority,
       dueDate: new Date(parsed.dueDate),
       assignedUserId: parsed.assignedUserId ?? null,
+      estimatedHours: parsed.estimatedHours,
     },
   })
 
@@ -47,6 +48,7 @@ export async function createTaskFromJson(data: {
       priority: parsed.priority,
       dueDate: new Date(parsed.dueDate),
       assignedUserId: parsed.assignedUserId ?? null,
+      estimatedHours: parsed.estimatedHours,
     },
   })
 
@@ -66,6 +68,7 @@ export async function updateTask(id: string, formData: FormData) {
       priority: parsed.priority,
       dueDate: new Date(parsed.dueDate),
       assignedUserId: parsed.assignedUserId ?? null,
+      estimatedHours: parsed.estimatedHours,
     },
   })
 
@@ -84,6 +87,14 @@ export async function updateTaskStatus(id: string, status: "TODO" | "IN_PROGRESS
 export async function deleteTask(id: string) {
   await prisma.task.delete({ where: { id } })
   revalidatePath("/")
+}
+
+export async function getUserTasks(userId: string) {
+  return prisma.task.findMany({
+    where: { assignedUserId: userId },
+    include: { assignedUser: true },
+    orderBy: { dueDate: "asc" },
+  })
 }
 
 export async function reorderTasks(

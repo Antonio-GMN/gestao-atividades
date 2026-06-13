@@ -7,16 +7,17 @@ import { TeamForm } from "@/components/team/team-form"
 import { TeamList } from "@/components/team/team-list"
 import { Plus } from "lucide-react"
 
-interface UserWithCount {
+interface UserWithHours {
   id: string
   name: string
   role: string
   createdAt: Date
   _count: { tasks: number }
+  totalEstimatedHours: number
 }
 
 interface TeamClientProps {
-  users: UserWithCount[]
+  users: UserWithHours[]
 }
 
 export function TeamClient({ users }: TeamClientProps) {

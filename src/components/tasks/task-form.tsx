@@ -92,15 +92,30 @@ export function TaskForm({ users, task, onClose }: TaskFormProps) {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="dueDate">Prazo</Label>
-        <Input
-          id="dueDate"
-          name="dueDate"
-          type="date"
-          defaultValue={task?.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : ""}
-          required
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="dueDate">Prazo</Label>
+          <Input
+            id="dueDate"
+            name="dueDate"
+            type="date"
+            defaultValue={task?.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : ""}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="estimatedHours">Estimativa (horas)</Label>
+          <Input
+            id="estimatedHours"
+            name="estimatedHours"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="Ex: 4"
+            required
+            defaultValue={task?.estimatedHours ?? ""}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-2">

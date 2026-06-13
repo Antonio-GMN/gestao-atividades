@@ -58,7 +58,10 @@ export function KanbanCard({ task, isDragOverlay }: KanbanCardProps) {
           <span className="text-[10px] text-zinc-500">{task.assignedUser.name}</span>
         )}
       </div>
-      <p className="text-[10px] text-zinc-400 mt-2">{formatDate(new Date(task.dueDate))}</p>
+      <div className="flex items-center gap-2 mt-2 text-[10px] text-zinc-400">
+        <span>{formatDate(new Date(task.dueDate))}</span>
+        {task.estimatedHours != null && <span>· {task.estimatedHours}h</span>}
+      </div>
     </div>
   )
 }

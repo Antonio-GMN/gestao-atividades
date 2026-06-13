@@ -13,15 +13,28 @@ export default async function DashboardPage() {
     orderBy: { dueDate: "asc" },
   })
 
-  const users = await prisma.user.findMany({
-    include: {
-      _count: {
-        select: {
-          tasks: { where: { status: { not: "DONE" } } },
+  const [users, activeTasks] = await Promise.all([
+    prisma.user.findMany({
+      include: {
+        _count: {
+          select: {
+            tasks: { where: { status: { not: "DONE" } } },
+          },
         },
       },
-    },
-  })
+    }),
+    prisma.task.findMany({
+      where: { assignedUserId: { not: null }, status: { not: "DONE" } },
+      select: { assignedUserId: true, estimatedHours: true },
+    }),
+  ])
+
+  const hoursMap: Record<string, number> = {}
+  for (const task of activeTasks) {
+    if (task.assignedUserId) {
+      hoursMap[task.assignedUserId] = (hoursMap[task.assignedUserId] ?? 0) + task.estimatedHours
+    }
+  }
 
   const now = new Date()
   const weekStart = new Date(now)
@@ -39,7 +52,7 @@ export default async function DashboardPage() {
 
   const overdueTasks = tasks.filter((t) => isOverdue(t.dueDate) && t.status !== "DONE")
   const riskTasks = tasks.filter((t) => isAtRisk(t.dueDate) && t.status !== "DONE" && !isOverdue(t.dueDate))
-  const overloadedUsers = users.filter((u) => u._count.tasks >= 4)
+  const overloadedUsers = users.filter((u) => (hoursMap[u.id] ?? 0) >= 24)
 
   const recentTasks = tasks.slice(0, 8)
 

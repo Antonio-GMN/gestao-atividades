@@ -7,6 +7,7 @@ export const taskSchema = z.object({
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
   dueDate: z.string().min(1, "Prazo é obrigatório"),
   assignedUserId: z.string().optional(),
+  estimatedHours: z.coerce.number().int().min(1, "Estimativa é obrigatória"),
 })
 
 export type TaskFormData = z.infer<typeof taskSchema>
