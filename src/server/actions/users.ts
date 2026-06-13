@@ -35,6 +35,21 @@ export async function createUser(formData: FormData) {
   revalidatePath("/")
 }
 
+export async function updateUser(id: string, formData: FormData) {
+  const raw = Object.fromEntries(formData)
+  const parsed = userSchema.parse(raw)
+
+  await prisma.user.update({
+    where: { id },
+    data: {
+      name: parsed.name,
+      role: parsed.role,
+    },
+  })
+
+  revalidatePath("/")
+}
+
 export async function deleteUser(id: string) {
   await prisma.user.delete({ where: { id } })
   revalidatePath("/")

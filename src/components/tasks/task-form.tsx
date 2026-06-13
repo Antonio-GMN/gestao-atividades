@@ -1,10 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { useActionState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { createTask, updateTask } from "@/server/actions/tasks"
 import type { Task, User } from "@/generated/prisma/client"
@@ -18,9 +20,14 @@ interface TaskFormProps {
 export function TaskForm({ users, task, onClose }: TaskFormProps) {
   const action = task ? updateTask.bind(null, task.id) : createTask
 
+  const [status, setStatus] = useState(task?.status ?? "TODO")
+  const [priority, setPriority] = useState(task?.priority ?? "MEDIUM")
+  const [assignedUserId, setAssignedUserId] = useState(task?.assignedUserId ?? "none")
+
   const [, formAction, isPending] = useActionState(async (_prev: unknown, formData: FormData) => {
-    formData.set("status", formData.get("status")?.toString() || "TODO")
-    formData.set("priority", formData.get("priority")?.toString() || "MEDIUM")
+    formData.set("status", status)
+    formData.set("priority", priority)
+    formData.set("assignedUserId", assignedUserId === "none" ? "" : assignedUserId)
     await action(formData)
     onClose()
   }, null)
@@ -39,50 +46,50 @@ export function TaskForm({ users, task, onClose }: TaskFormProps) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <select
-            id="status"
-            name="status"
-            defaultValue={task?.status ?? "TODO"}
-            className="flex h-9 w-full rounded-md border border-zinc-200 bg-transparent px-3 py-1 text-sm shadow-sm dark:border-zinc-800"
-          >
-            <option value="TODO">A Fazer</option>
-            <option value="IN_PROGRESS">Em Andamento</option>
-            <option value="DONE">Concluído</option>
-          </select>
+          <Label>Status</Label>
+          <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODO">A Fazer</SelectItem>
+              <SelectItem value="IN_PROGRESS">Em Andamento</SelectItem>
+              <SelectItem value="DONE">Concluído</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="priority">Prioridade</Label>
-          <select
-            id="priority"
-            name="priority"
-            defaultValue={task?.priority ?? "MEDIUM"}
-            className="flex h-9 w-full rounded-md border border-zinc-200 bg-transparent px-3 py-1 text-sm shadow-sm dark:border-zinc-800"
-          >
-            <option value="LOW">Baixa</option>
-            <option value="MEDIUM">Média</option>
-            <option value="HIGH">Alta</option>
-            <option value="URGENT">Urgente</option>
-          </select>
+          <Label>Prioridade</Label>
+          <Select value={priority} onValueChange={(v) => setPriority(v as typeof priority)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="LOW">Baixa</SelectItem>
+              <SelectItem value="MEDIUM">Média</SelectItem>
+              <SelectItem value="HIGH">Alta</SelectItem>
+              <SelectItem value="URGENT">Urgente</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="assignedUserId">Responsável</Label>
-        <select
-          id="assignedUserId"
-          name="assignedUserId"
-          defaultValue={task?.assignedUserId ?? ""}
-          className="flex h-9 w-full rounded-md border border-zinc-200 bg-transparent px-3 py-1 text-sm shadow-sm dark:border-zinc-800"
-        >
-          <option value="">Sem responsável</option>
-          {users.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.name}
-            </option>
-          ))}
-        </select>
+        <Label>Responsável</Label>
+        <Select value={assignedUserId} onValueChange={setAssignedUserId}>
+          <SelectTrigger>
+            <SelectValue placeholder="Sem responsável" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Sem responsável</SelectItem>
+            {users.map((user) => (
+              <SelectItem key={user.id} value={user.id}>
+                {user.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

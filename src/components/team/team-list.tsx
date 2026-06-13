@@ -1,10 +1,13 @@
 "use client"
 
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { TeamForm } from "./team-form"
 import { deleteUser } from "@/server/actions/users"
-import { Trash2, Circle } from "lucide-react"
+import { Pencil, Trash2, Circle } from "lucide-react"
 
 interface UserWithCount {
   id: string
@@ -19,6 +22,8 @@ interface TeamListProps {
 }
 
 export function TeamList({ users }: TeamListProps) {
+  const [editingUser, setEditingUser] = useState<UserWithCount | null>(null)
+
   function getWorkload(count: number) {
     if (count >= 4) return { label: "Sobrecarregado", variant: "destructive" as const, color: "text-red-500" }
     if (count >= 2) return { label: "Equilibrado", variant: "success" as const, color: "text-emerald-500" }
@@ -45,6 +50,19 @@ export function TeamList({ users }: TeamListProps) {
                     <p className="text-sm font-medium">{user._count.tasks} tarefas</p>
                     <Badge variant={workload.variant}>{workload.label}</Badge>
                   </div>
+                  <Dialog open={editingUser?.id === user.id} onOpenChange={(open) => { if (!open) setEditingUser(null) }}>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={() => setEditingUser(user)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Editar Colaborador</DialogTitle>
+                      </DialogHeader>
+                      <TeamForm user={editingUser ?? undefined} onClose={() => setEditingUser(null)} />
+                    </DialogContent>
+                  </Dialog>
                   <Button variant="ghost" size="icon" onClick={() => deleteUser(user.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
