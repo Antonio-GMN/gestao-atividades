@@ -17,6 +17,15 @@ export function isOverdue(dueDate: Date) {
   return new Date(dueDate) < new Date() && dueDate.toDateString() !== new Date().toDateString()
 }
 
+export function formatEstimatedHours(hours: number): string {
+  const h = Math.floor(hours)
+  const m = Math.round((hours - h) * 60)
+  if (h === 0 && m === 0) return "0h"
+  if (h === 0) return `${m}min`
+  if (m === 0) return `${h}h`
+  return `${h}h ${m}min`
+}
+
 export function isAtRisk(dueDate: Date) {
   const now = new Date()
   const diffMs = new Date(dueDate).getTime() - now.getTime()

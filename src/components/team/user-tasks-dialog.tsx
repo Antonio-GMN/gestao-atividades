@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { getUserTasks } from "@/server/actions/tasks"
-import { formatDate, isOverdue, isAtRisk } from "@/lib/utils"
+import { formatDate, formatEstimatedHours, isOverdue, isAtRisk } from "@/lib/utils"
 import type { Task, User } from "@/generated/prisma/client"
 
 interface UserInfo {
@@ -152,7 +152,7 @@ export function UserTasksDialog({ user, onClose }: UserTasksDialogProps) {
                       </div>
                       <div className="text-right shrink-0 text-xs text-zinc-400">
                         <p>{formatDate(new Date(task.dueDate))}</p>
-                        <p className="mt-0.5">{task.estimatedHours}h</p>
+                        <p className="mt-0.5">{formatEstimatedHours(task.estimatedHours)}</p>
                       </div>
                     </div>
                   </CardContent>

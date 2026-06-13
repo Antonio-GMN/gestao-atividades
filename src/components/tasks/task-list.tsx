@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { TaskForm } from "./task-form"
 import { deleteTask, updateTaskStatus } from "@/server/actions/tasks"
-import { formatDate, isOverdue, isAtRisk } from "@/lib/utils"
+import { formatDate, formatEstimatedHours, isOverdue, isAtRisk } from "@/lib/utils"
 import { Pencil, Trash2, ChevronRight } from "lucide-react"
 import type { Task, User } from "@/generated/prisma/client"
 
@@ -80,7 +80,7 @@ export function TaskList({ tasks, users }: TaskListProps) {
                 <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
                   <span>Prazo: {formatDate(new Date(task.dueDate))}</span>
                   {task.assignedUser && <span>Responsável: {task.assignedUser.name}</span>}
-                  {task.estimatedHours != null && <span>Estimativa: {task.estimatedHours}h</span>}
+                  {task.estimatedHours != null && <span>Estimativa: {formatEstimatedHours(task.estimatedHours)}</span>}
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">

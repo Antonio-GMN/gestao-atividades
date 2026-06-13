@@ -3,7 +3,7 @@
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Badge } from "@/components/ui/badge"
-import { formatDate, isOverdue, isAtRisk } from "@/lib/utils"
+import { formatDate, formatEstimatedHours, isOverdue, isAtRisk } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 import type { Task, User } from "@/generated/prisma/client"
 
@@ -60,7 +60,7 @@ export function KanbanCard({ task, isDragOverlay }: KanbanCardProps) {
       </div>
       <div className="flex items-center gap-2 mt-2 text-[10px] text-zinc-400">
         <span>{formatDate(new Date(task.dueDate))}</span>
-        {task.estimatedHours != null && <span>· {task.estimatedHours}h</span>}
+        {task.estimatedHours != null && <span>· {formatEstimatedHours(task.estimatedHours)}</span>}
       </div>
     </div>
   )

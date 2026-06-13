@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Task" ALTER COLUMN "estimatedHours" SET DATA TYPE DOUBLE PRECISION;

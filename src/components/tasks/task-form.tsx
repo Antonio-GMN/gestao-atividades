@@ -24,10 +24,16 @@ export function TaskForm({ users, task, onClose }: TaskFormProps) {
   const [priority, setPriority] = useState(task?.priority ?? "MEDIUM")
   const [assignedUserId, setAssignedUserId] = useState(task?.assignedUserId ?? "none")
 
+  const [hours, setHours] = useState(task ? Math.floor(task.estimatedHours) : "")
+  const [minutes, setMinutes] = useState(task ? Math.round((task.estimatedHours % 1) * 60) : "")
+
   const [, formAction, isPending] = useActionState(async (_prev: unknown, formData: FormData) => {
     formData.set("status", status)
     formData.set("priority", priority)
     formData.set("assignedUserId", assignedUserId === "none" ? "" : assignedUserId)
+    const h = Number(hours) || 0
+    const m = Number(minutes) || 0
+    formData.set("estimatedHours", String(h + m / 60))
     await action(formData)
     onClose()
   }, null)
@@ -104,17 +110,26 @@ export function TaskForm({ users, task, onClose }: TaskFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="estimatedHours">Estimativa (horas)</Label>
-          <Input
-            id="estimatedHours"
-            name="estimatedHours"
-            type="number"
-            min="1"
-            step="1"
-            placeholder="Ex: 4"
-            required
-            defaultValue={task?.estimatedHours ?? ""}
-          />
+          <Label>Estimativa</Label>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              min="0"
+              placeholder="Horas"
+              className="[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              value={hours}
+              onChange={(e) => setHours(e.target.value)}
+            />
+            <Input
+              type="number"
+              min="0"
+              max="59"
+              placeholder="Min"
+              className="[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              value={minutes}
+              onChange={(e) => setMinutes(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 

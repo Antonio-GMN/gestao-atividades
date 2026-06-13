@@ -108,7 +108,7 @@ async function main() {
         priority: template.priority,
         dueDate,
         assignedUserId: userId,
-        estimatedHours: Math.floor(Math.random() * 16) + 2,
+        estimatedHours: +(Math.random() * 15 + 2).toFixed(1),
         createdAt: new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000),
       },
     })

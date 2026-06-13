@@ -9,6 +9,7 @@ import { TeamForm } from "./team-form"
 import { UserTasksDialog } from "./user-tasks-dialog"
 import { deleteUser } from "@/server/actions/users"
 import { Pencil, Trash2, Circle } from "lucide-react"
+import { formatEstimatedHours } from "@/lib/utils"
 
 interface UserWithHours {
   id: string
@@ -26,6 +27,7 @@ interface TeamListProps {
 export function TeamList({ users }: TeamListProps) {
   const [editingUser, setEditingUser] = useState<UserWithHours | null>(null)
   const [viewingUser, setViewingUser] = useState<UserWithHours | null>(null)
+  const [deletingUser, setDeletingUser] = useState<UserWithHours | null>(null)
 
   function getWorkload(hours: number) {
     if (hours >= 24) return { label: "Sobrecarregado", variant: "destructive" as const, color: "text-red-500" }
@@ -56,7 +58,7 @@ export function TeamList({ users }: TeamListProps) {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-sm font-medium">{user.totalEstimatedHours}h estimadas</p>
+                    <p className="text-sm font-medium">{formatEstimatedHours(user.totalEstimatedHours)} estimadas</p>
                     <p className="text-xs text-zinc-400">{user._count.tasks} tarefas</p>
                     <Badge variant={workload.variant}>{workload.label}</Badge>
                   </div>
@@ -73,7 +75,7 @@ export function TeamList({ users }: TeamListProps) {
                       <TeamForm user={editingUser ?? undefined} onClose={() => setEditingUser(null)} />
                     </DialogContent>
                   </Dialog>
-                  <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deleteUser(user.id) }}>
+                  <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setDeletingUser(user) }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -82,6 +84,32 @@ export function TeamList({ users }: TeamListProps) {
           </Card>
         )
       })}
+
+      <Dialog open={!!deletingUser} onOpenChange={(open) => { if (!open) setDeletingUser(null) }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remover Colaborador</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-zinc-500">
+            Tem certeza que deseja remover <strong>{deletingUser?.name}</strong>?
+            Esta ação não pode ser desfeita.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeletingUser(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deletingUser) deleteUser(deletingUser.id)
+                setDeletingUser(null)
+              }}
+            >
+              Remover
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
