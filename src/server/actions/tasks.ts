@@ -21,6 +21,7 @@ export async function createTask(formData: FormData) {
       description: parsed.description ?? null,
       status: parsed.status,
       priority: parsed.priority,
+      startDate: parsed.startDate ? new Date(parsed.startDate) : null,
       dueDate: new Date(parsed.dueDate),
       assignedUserId: parsed.assignedUserId ?? null,
       estimatedHours: parsed.estimatedHours,
@@ -35,6 +36,7 @@ export async function createTaskFromJson(data: {
   description?: string
   status: "TODO" | "IN_PROGRESS" | "DONE"
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+  startDate?: string
   dueDate: string
   assignedUserId?: string
 }) {
@@ -46,6 +48,7 @@ export async function createTaskFromJson(data: {
       description: parsed.description ?? null,
       status: parsed.status,
       priority: parsed.priority,
+      startDate: parsed.startDate ? new Date(parsed.startDate) : null,
       dueDate: new Date(parsed.dueDate),
       assignedUserId: parsed.assignedUserId ?? null,
       estimatedHours: parsed.estimatedHours,
@@ -66,6 +69,7 @@ export async function updateTask(id: string, formData: FormData) {
       description: parsed.description ?? null,
       status: parsed.status,
       priority: parsed.priority,
+      startDate: parsed.startDate ? new Date(parsed.startDate) : null,
       dueDate: new Date(parsed.dueDate),
       assignedUserId: parsed.assignedUserId ?? null,
       estimatedHours: parsed.estimatedHours,

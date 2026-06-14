@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { TaskForm } from "@/components/tasks/task-form"
-import { formatEstimatedHours } from "@/lib/utils"
+import { formatDate, formatEstimatedHours } from "@/lib/utils"
 import { AlertTriangle, ChevronLeft, ChevronRight, Pencil } from "lucide-react"
 import type { Task, User } from "@/generated/prisma/client"
 
@@ -136,6 +136,7 @@ export function WeeklyAgenda({ tasks, users }: WeeklyAgendaProps) {
                     </Badge>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 text-xs text-zinc-500">
+                    {task.startDate && <span className="hidden sm:inline">{formatDate(new Date(task.startDate))}</span>}
                     {task.assignedUser && <span>{task.assignedUser.name}</span>}
                     {task.estimatedHours != null && (
                       <span>{formatEstimatedHours(task.estimatedHours)}</span>
@@ -211,6 +212,11 @@ export function WeeklyAgenda({ tasks, users }: WeeklyAgendaProps) {
                         </span>
                       )}
                     </div>
+                    {task.startDate && (
+                      <p className="text-[8px] text-zinc-300 dark:text-zinc-500 mt-0.5 leading-none">
+                        Início {formatDate(new Date(task.startDate))}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>

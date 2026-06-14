@@ -100,6 +100,15 @@ export function TaskForm({ users, task, onClose }: TaskFormProps) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
+          <Label htmlFor="startDate">Data de Início</Label>
+          <Input
+            id="startDate"
+            name="startDate"
+            type="date"
+            defaultValue={task?.startDate ? new Date(task.startDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0]}
+          />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="dueDate">Prazo</Label>
           <Input
             id="dueDate"

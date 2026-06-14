@@ -5,6 +5,7 @@ export const taskSchema = z.object({
   description: z.string().optional(),
   status: z.enum(["TODO", "IN_PROGRESS", "DONE"]),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+  startDate: z.string().optional(),
   dueDate: z.string().min(1, "Prazo é obrigatório"),
   assignedUserId: z.string().optional(),
   estimatedHours: z.coerce.number().min(0.25, "Estimativa deve ser no mínimo 15 minutos"),

@@ -151,7 +151,8 @@ export function UserTasksDialog({ user, onClose }: UserTasksDialogProps) {
                         </div>
                       </div>
                       <div className="text-right shrink-0 text-xs text-zinc-400">
-                        <p>{formatDate(new Date(task.dueDate))}</p>
+                        {task.startDate && <p>Início: {formatDate(new Date(task.startDate))}</p>}
+                        <p>Prazo: {formatDate(new Date(task.dueDate))}</p>
                         <p className="mt-0.5">{formatEstimatedHours(task.estimatedHours)}</p>
                       </div>
                     </div>

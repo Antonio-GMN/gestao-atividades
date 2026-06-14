@@ -115,12 +115,16 @@ async function main() {
     const range = workloadByAssignee[assigneeIdx] ?? { min: 2, max: 8 }
     const estimatedHours = +(Math.random() * (range.max - range.min) + range.min).toFixed(1)
 
+    const startDate = new Date(dueDate)
+    startDate.setDate(startDate.getDate() - Math.floor(Math.random() * 7) - 1)
+
     await prisma.task.create({
       data: {
         title: template.title,
         description: template.description ?? null,
         status,
         priority: template.priority,
+        startDate,
         dueDate,
         assignedUserId: userId,
         estimatedHours,

@@ -70,7 +70,8 @@ export function KanbanCard({ task, isDragOverlay, onEdit }: KanbanCardProps) {
         )}
       </div>
       <div className="flex items-center gap-2 mt-2 text-[10px] text-zinc-400">
-        <span>{formatDate(new Date(task.dueDate))}</span>
+        {task.startDate && <span>Início: {formatDate(new Date(task.startDate))}</span>}
+        <span>Prazo: {formatDate(new Date(task.dueDate))}</span>
         {task.estimatedHours != null && <span>· {formatEstimatedHours(task.estimatedHours)}</span>}
       </div>
     </div>

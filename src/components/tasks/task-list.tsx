@@ -79,6 +79,7 @@ export function TaskList({ tasks, users }: TaskListProps) {
                   <p className="text-sm text-zinc-500 mt-1 line-clamp-2">{task.description}</p>
                 )}
                 <div className="flex items-center gap-4 mt-2 text-xs text-zinc-500">
+                  {task.startDate && <span>Início: {formatDate(new Date(task.startDate))}</span>}
                   <span>Prazo: {formatDate(new Date(task.dueDate))}</span>
                   {task.assignedUser && <span>Responsável: {task.assignedUser.name}</span>}
                   {task.estimatedHours != null && <span>Estimativa: {formatEstimatedHours(task.estimatedHours)}</span>}
