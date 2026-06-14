@@ -1,15 +1,18 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCorners, type DragStartEvent, type DragEndEvent, type DragOverEvent } from "@dnd-kit/core"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, rectIntersection, type DragStartEvent, type DragEndEvent, type DragOverEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable"
 import { KanbanColumn } from "./kanban-column"
 import { KanbanCard } from "./kanban-card"
+import { TaskForm } from "@/components/tasks/task-form"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { reorderTasks } from "@/server/actions/tasks"
 import type { Task, User } from "@/generated/prisma/client"
 
 interface KanbanBoardProps {
   tasks: (Task & { assignedUser?: User | null })[]
+  users: User[]
 }
 
 const columns = [
@@ -18,12 +21,16 @@ const columns = [
   { id: "DONE", title: "Concluído" },
 ]
 
-export function KanbanBoard({ tasks }: KanbanBoardProps) {
+export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<(Task & { assignedUser?: User | null }) | null>(null)
+  const [editingTask, setEditingTask] = useState<(Task & { assignedUser?: User | null }) | null>(null)
   const [optimisticTasks, setOptimisticTasks] = useState(tasks)
+  const pendingOps = useRef(0)
 
   useEffect(() => {
-    setOptimisticTasks(tasks)
+    if (pendingOps.current === 0) {
+      setOptimisticTasks(tasks)
+    }
   }, [tasks])
 
   const displayedTasks = optimisticTasks
@@ -53,18 +60,18 @@ export function KanbanBoard({ tasks }: KanbanBoardProps) {
     return map
   }, [displayedTasks])
 
-  function findColumn(id: string): string | undefined {
+  const findColumn = useCallback((id: string): string | undefined => {
     if (columns.find((c) => c.id === id)) return id
     const task = displayedTasks.find((t) => t.id === id)
     return task?.status
-  }
+  }, [displayedTasks])
 
-  function handleDragStart(event: DragStartEvent) {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     const task = displayedTasks.find((t) => t.id === event.active.id)
     if (task) setActiveTask(task)
-  }
+  }, [displayedTasks])
 
-  function handleDragOver(event: DragOverEvent) {
+  const handleDragOver = useCallback((event: DragOverEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
@@ -80,9 +87,9 @@ export function KanbanBoard({ tasks }: KanbanBoardProps) {
         t.id === active.id ? { ...t, status: overCol as "TODO" | "IN_PROGRESS" | "DONE" } : t,
       )
     })
-  }
+  }, [findColumn])
 
-  async function handleDragEnd(event: DragEndEvent) {
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event
     setActiveTask(null)
 
@@ -121,22 +128,27 @@ export function KanbanBoard({ tasks }: KanbanBoardProps) {
 
     const updates = reordered.map((t, i) => ({
       id: t.id,
-      status: newStatus,
+      ...(activeCol !== overCol && t.id === activeId ? { status: newStatus } : {}),
       sortOrder: i,
-    })) as { id: string; status: "TODO" | "IN_PROGRESS" | "DONE"; sortOrder: number }[]
+    }))
 
     setOptimisticTasks((prev) => {
       const others = prev.filter((t) => !reordered.find((r) => r.id === t.id))
       return [...others, ...reordered]
     })
 
-    await reorderTasks(updates)
-  }
+    pendingOps.current++
+    try {
+      await reorderTasks(updates)
+    } finally {
+      pendingOps.current--
+    }
+  }, [displayedTasks, findColumn, tasksByColumn, tasks])
 
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={rectIntersection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
@@ -146,7 +158,7 @@ export function KanbanBoard({ tasks }: KanbanBoardProps) {
           <KanbanColumn key={column.id} id={column.id} title={column.title} count={tasksByColumn[column.id].length}>
             <SortableContext items={tasksByColumn[column.id].map((t) => t.id)} strategy={verticalListSortingStrategy}>
               {tasksByColumn[column.id].map((task) => (
-                <KanbanCard key={task.id} task={task} />
+                <KanbanCard key={task.id} task={task} onEdit={setEditingTask} />
               ))}
             </SortableContext>
           </KanbanColumn>
@@ -155,6 +167,14 @@ export function KanbanBoard({ tasks }: KanbanBoardProps) {
       <DragOverlay>
         {activeTask ? <KanbanCard task={activeTask} isDragOverlay /> : null}
       </DragOverlay>
+      <Dialog open={!!editingTask} onOpenChange={(open) => { if (!open) setEditingTask(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Atividade</DialogTitle>
+          </DialogHeader>
+          <TaskForm users={users} task={editingTask ?? undefined} onClose={() => setEditingTask(null)} />
+        </DialogContent>
+      </Dialog>
     </DndContext>
   )
 }

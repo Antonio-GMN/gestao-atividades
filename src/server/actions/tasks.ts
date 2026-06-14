@@ -100,16 +100,24 @@ export async function getUserTasks(userId: string) {
 export async function reorderTasks(
   updates: { id: string; status?: "TODO" | "IN_PROGRESS" | "DONE"; sortOrder: number }[],
 ) {
-  await prisma.$transaction(
-    updates.map((u) =>
-      prisma.task.update({
-        where: { id: u.id },
-        data: {
-          sortOrder: u.sortOrder,
-          ...(u.status ? { status: u.status } : {}),
-        },
-      }),
-    ),
+  if (updates.length === 0) return
+
+  const values: (string | number | null)[] = []
+  const placeholders = updates
+    .map((u, i) => {
+      values.push(u.id, u.sortOrder, u.status ?? null)
+      return `($${i * 3 + 1}::text, $${i * 3 + 2}::int, $${i * 3 + 3}::"TaskStatus")`
+    })
+    .join(", ")
+
+  await prisma.$executeRawUnsafe(
+    `UPDATE "Task" SET
+      "sortOrder" = v.sort_order,
+      "status" = COALESCE(v.status, "Task"."status")
+    FROM (VALUES ${placeholders}) AS v(id, sort_order, status)
+    WHERE "Task"."id" = v.id`,
+    ...values,
   )
+
   revalidatePath("/")
 }
