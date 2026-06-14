@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { KpiCard } from "@/components/dashboard/kpi-card"
 import { TaskList } from "@/components/tasks/task-list"
-import { isOverdue, isAtRisk } from "@/lib/utils"
+import { formatDate, isOverdue, isAtRisk } from "@/lib/utils"
 import { CheckCircle2, AlertTriangle, Clock, Users, ListTodo } from "lucide-react"
 import Link from "next/link"
 
@@ -56,11 +56,17 @@ export default async function DashboardPage() {
 
   const recentTasks = tasks.slice(0, 8)
 
+  const weekEndDisplay = new Date(weekEnd)
+  weekEndDisplay.setDate(weekEndDisplay.getDate() - 1)
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Dashboard</h1>
         <p className="text-zinc-500 mt-1">Visão geral da operação</p>
+        <p className="text-xs text-zinc-400 mt-1">
+          Dados atualizados em {formatDate(now)} · Período de referência: {formatDate(weekStart)} a {formatDate(weekEndDisplay)}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -68,7 +74,7 @@ export default async function DashboardPage() {
           <KpiCard
             title="Taxa de Conclusão (Semana)"
             value={`${completionRate}%`}
-            description={`${weekDone.length} de ${weekTasks.length} tarefas concluídas`}
+            description={`${weekDone.length} de ${weekTasks.length} tarefas concluídas (${weekStart.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} - ${weekEndDisplay.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })})`}
             icon={<CheckCircle2 className="h-5 w-5" />}
             variant={completionRate >= 70 ? "success" : completionRate >= 40 ? "warning" : "destructive"}
           />
@@ -77,7 +83,7 @@ export default async function DashboardPage() {
           <KpiCard
             title="Tarefas Atrasadas"
             value={overdueTasks.length}
-            description="Precisam de atenção imediata"
+            description={`${overdueTasks.length > 0 ? `${formatDate(overdueTasks[0].dueDate)}` : "Nenhuma"} · Precisam de atenção imediata`}
             icon={<AlertTriangle className="h-5 w-5" />}
             variant={overdueTasks.length > 0 ? "destructive" : "success"}
           />
@@ -86,7 +92,7 @@ export default async function DashboardPage() {
           <KpiCard
             title="Tarefas em Risco"
             value={riskTasks.length}
-            description="Vencem nos próximos 3 dias"
+            description={`${riskTasks.length > 0 ? `Vencem até ${formatDate(riskTasks[riskTasks.length - 1].dueDate)}` : "Nenhuma nos próximos 3 dias"}`}
             icon={<Clock className="h-5 w-5" />}
             variant={riskTasks.length > 0 ? "warning" : "success"}
           />

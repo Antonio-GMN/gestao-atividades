@@ -21,6 +21,8 @@ export function TasksClient({ tasks, users }: TasksClientProps) {
   const [statusFilter, setStatusFilter] = useState("all")
   const [priorityFilter, setPriorityFilter] = useState("all")
   const [userFilter, setUserFilter] = useState("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -28,17 +30,33 @@ export function TasksClient({ tasks, users }: TasksClientProps) {
       if (statusFilter !== "all" && task.status !== statusFilter) return false
       if (priorityFilter !== "all" && task.priority !== priorityFilter) return false
       if (userFilter !== "all" && task.assignedUserId !== userFilter) return false
+      if (dateFrom) {
+        const taskDate = new Date(task.dueDate)
+        taskDate.setHours(0, 0, 0, 0)
+        const from = new Date(dateFrom)
+        from.setHours(0, 0, 0, 0)
+        if (taskDate < from) return false
+      }
+      if (dateTo) {
+        const taskDate = new Date(task.dueDate)
+        taskDate.setHours(0, 0, 0, 0)
+        const to = new Date(dateTo)
+        to.setHours(23, 59, 59, 999)
+        if (taskDate > to) return false
+      }
       return true
     })
-  }, [tasks, search, statusFilter, priorityFilter, userFilter])
+  }, [tasks, search, statusFilter, priorityFilter, userFilter, dateFrom, dateTo])
 
-  const hasActiveFilters = search || statusFilter !== "all" || priorityFilter !== "all" || userFilter !== "all"
+  const hasActiveFilters = search || statusFilter !== "all" || priorityFilter !== "all" || userFilter !== "all" || dateFrom || dateTo
 
   function clearFilters() {
     setSearch("")
     setStatusFilter("all")
     setPriorityFilter("all")
     setUserFilter("all")
+    setDateFrom("")
+    setDateTo("")
   }
 
   return (
@@ -120,6 +138,22 @@ export function TasksClient({ tasks, users }: TasksClientProps) {
             ))}
           </SelectContent>
         </Select>
+
+        <Input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="w-[150px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          placeholder="Data início"
+        />
+
+        <Input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="w-[150px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          placeholder="Data fim"
+        />
 
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>

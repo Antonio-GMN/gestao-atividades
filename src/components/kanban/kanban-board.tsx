@@ -32,12 +32,23 @@ export function KanbanBoard({ tasks }: KanbanBoardProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
 
+  const priorityWeight: Record<string, number> = {
+    URGENT: 0,
+    HIGH: 1,
+    MEDIUM: 2,
+    LOW: 3,
+  }
+
   const tasksByColumn = useMemo(() => {
     const map: Record<string, (Task & { assignedUser?: User | null })[]> = {}
     for (const col of columns) {
       map[col.id] = displayedTasks
         .filter((t) => t.status === col.id)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .sort((a, b) => {
+          const pw = (priorityWeight[a.priority] ?? 99) - (priorityWeight[b.priority] ?? 99)
+          if (pw !== 0) return pw
+          return a.sortOrder - b.sortOrder
+        })
     }
     return map
   }, [displayedTasks])
