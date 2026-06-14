@@ -44,6 +44,7 @@ const priorityColors: Record<string, "default" | "secondary" | "warning" | "dest
 
 export function TaskList({ tasks, users }: TaskListProps) {
   const [editingTask, setEditingTask] = useState<(Task & { assignedUser?: User | null }) | null>(null)
+  const [deletingTask, setDeletingTask] = useState<(Task & { assignedUser?: User | null }) | null>(null)
 
   const nextStatus = (current: string) => {
     if (current === "TODO") return "IN_PROGRESS"
@@ -102,7 +103,7 @@ export function TaskList({ tasks, users }: TaskListProps) {
                     <TaskForm users={users} task={editingTask ?? undefined} onClose={() => setEditingTask(null)} />
                   </DialogContent>
                 </Dialog>
-                <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
+                <Button variant="ghost" size="icon" onClick={() => setDeletingTask(task)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -110,6 +111,31 @@ export function TaskList({ tasks, users }: TaskListProps) {
           </CardContent>
         </Card>
       ))}
+      <Dialog open={!!deletingTask} onOpenChange={(open) => { if (!open) setDeletingTask(null) }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remover Atividade</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-zinc-500">
+            Tem certeza que deseja remover <strong>{deletingTask?.title}</strong>?
+            Esta ação não pode ser desfeita.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeletingTask(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deletingTask) deleteTask(deletingTask.id)
+                setDeletingTask(null)
+              }}
+            >
+              Remover
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

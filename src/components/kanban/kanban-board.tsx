@@ -5,9 +5,14 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, rectInte
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable"
 import { KanbanColumn } from "./kanban-column"
 import { KanbanCard } from "./kanban-card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TaskForm } from "@/components/tasks/task-form"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { reorderTasks } from "@/server/actions/tasks"
+import { Search, X } from "lucide-react"
 import type { Task, User } from "@/generated/prisma/client"
 
 interface KanbanBoardProps {
@@ -27,13 +32,29 @@ export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
   const [optimisticTasks, setOptimisticTasks] = useState(tasks)
   const pendingOps = useRef(0)
 
+  const [search, setSearch] = useState("")
+  const [priorityFilter, setPriorityFilter] = useState("all")
+  const [userFilter, setUserFilter] = useState("all")
+
   useEffect(() => {
     if (pendingOps.current === 0) {
       setOptimisticTasks(tasks)
     }
   }, [tasks])
 
-  const displayedTasks = optimisticTasks
+  const filteredTasks = useMemo(() => {
+    return optimisticTasks.filter((t) => {
+      if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false
+      if (priorityFilter !== "all" && t.priority !== priorityFilter) return false
+      if (userFilter !== "all") {
+        if (userFilter === "none" && t.assignedUserId !== null) return false
+        if (userFilter !== "none" && t.assignedUserId !== userFilter) return false
+      }
+      return true
+    })
+  }, [optimisticTasks, search, priorityFilter, userFilter])
+
+  const displayedTasks = filteredTasks
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -145,7 +166,79 @@ export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
     }
   }, [displayedTasks, findColumn, tasksByColumn, tasks])
 
+  const hasActiveFilters = search || priorityFilter !== "all" || userFilter !== "all"
+
+  function clearFilters() {
+    setSearch("")
+    setPriorityFilter("all")
+    setUserFilter("all")
+  }
+
   return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1 flex-1 min-w-[200px] max-w-sm">
+          <Label htmlFor="kanban-search">Busca</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
+            <Input
+              id="kanban-search"
+              placeholder="Buscar por título..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <Label>Prioridade</Label>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Prioridade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="URGENT">Urgente</SelectItem>
+              <SelectItem value="HIGH">Alta</SelectItem>
+              <SelectItem value="MEDIUM">Média</SelectItem>
+              <SelectItem value="LOW">Baixa</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <Label>Responsável</Label>
+          <Select value={userFilter} onValueChange={setUserFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Responsável" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="none">Sem responsável</SelectItem>
+              {users.map((user) => (
+                <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="mb-0.5">
+            <X className="h-4 w-4 mr-1" />
+            Limpar
+          </Button>
+        )}
+      </div>
+
     <DndContext
       sensors={sensors}
       collisionDetection={rectIntersection}
@@ -176,5 +269,6 @@ export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
         </DialogContent>
       </Dialog>
     </DndContext>
+    </div>
   )
 }

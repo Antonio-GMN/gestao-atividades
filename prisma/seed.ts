@@ -97,8 +97,23 @@ async function main() {
       dueDate = getDate(5 + daysOffset)
     }
 
+    const workloadByAssignee: Record<number, { min: number; max: number }> = {
+      0: { min: 5, max: 7 },   // Ana - equilíbrio (4 tasks → 20-28h, ~3 active)
+      1: { min: 5, max: 7 },   // Carlos - equilíbrio (4 tasks → 20-28h, ~3 active)
+      2: { min: 20, max: 24 }, // Mariana - SOBRECARREGADA (3 tasks → 60-72h, ~2 active ≈ 40h+)
+      3: { min: 6, max: 9 },   // Pedro - equilíbrio (3 tasks → 18-27h, ~2 active)
+      4: { min: 8, max: 12 },  // Juliana - equilíbrio (2 tasks → 16-24h, ~2 active)
+      5: { min: 14, max: 18 }, // Rafael - SOBRECARREGADO (4 tasks → 56-72h, ~3 active ≈ 45h+)
+      6: { min: 1, max: 2 },   // Beatriz - OCIOSA (2 tasks → 2-4h, ~2 active)
+      7: { min: 5, max: 8 },   // Lucas - equilíbrio (4 tasks → 20-32h, ~3 active)
+      8: { min: 1, max: 2 },   // Amanda - OCIOSA (2 tasks → 2-4h, ~2 active)
+      9: { min: 0.5, max: 1.5 }, // Fernando - OCIOSO (2 tasks → 1-3h, ~0 active)
+    }
+
     const assigneeIdx = template.assignee
     const userId = assigneeIdx < createdUsers.length ? createdUsers[assigneeIdx].id : undefined
+    const range = workloadByAssignee[assigneeIdx] ?? { min: 2, max: 8 }
+    const estimatedHours = +(Math.random() * (range.max - range.min) + range.min).toFixed(1)
 
     await prisma.task.create({
       data: {
@@ -108,7 +123,7 @@ async function main() {
         priority: template.priority,
         dueDate,
         assignedUserId: userId,
-        estimatedHours: +(Math.random() * 15 + 2).toFixed(1),
+        estimatedHours,
         createdAt: new Date(now.getTime() - Math.random() * 30 * 24 * 60 * 60 * 1000),
       },
     })
