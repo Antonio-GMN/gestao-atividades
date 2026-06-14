@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { KpiCard } from "@/components/dashboard/kpi-card"
-import { TaskList } from "@/components/tasks/task-list"
+import { WeeklyAgenda } from "@/components/dashboard/weekly-agenda"
 import { formatDate, isOverdue, isAtRisk } from "@/lib/utils"
-import { CheckCircle2, AlertTriangle, Clock, Users, ListTodo } from "lucide-react"
+import { CheckCircle2, AlertTriangle, Clock, Users } from "lucide-react"
 import Link from "next/link"
 
 export const dynamic = "force-dynamic"
@@ -53,8 +53,6 @@ export default async function DashboardPage() {
   const overdueTasks = tasks.filter((t) => isOverdue(t.dueDate) && t.status !== "DONE")
   const riskTasks = tasks.filter((t) => isAtRisk(t.dueDate) && t.status !== "DONE" && !isOverdue(t.dueDate))
   const overloadedUsers = users.filter((u) => (hoursMap[u.id] ?? 0) >= 24)
-
-  const recentTasks = tasks.slice(0, 8)
 
   const weekEndDisplay = new Date(weekEnd)
   weekEndDisplay.setDate(weekEndDisplay.getDate() - 1)
@@ -108,16 +106,7 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Atividades Recentes</h2>
-          <Link href="/atividades" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50 flex items-center gap-1">
-            <ListTodo className="h-4 w-4" />
-            Ver todas
-          </Link>
-        </div>
-        <TaskList tasks={recentTasks} users={users} />
-      </div>
+      <WeeklyAgenda tasks={tasks} users={users} />
     </div>
   )
 }

@@ -54,8 +54,6 @@ export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
     })
   }, [optimisticTasks, search, priorityFilter, userFilter])
 
-  const displayedTasks = filteredTasks
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   )
@@ -70,7 +68,7 @@ export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
   const tasksByColumn = useMemo(() => {
     const map: Record<string, (Task & { assignedUser?: User | null })[]> = {}
     for (const col of columns) {
-      map[col.id] = displayedTasks
+      map[col.id] = optimisticTasks
         .filter((t) => t.status === col.id)
         .sort((a, b) => {
           const pw = (priorityWeight[a.priority] ?? 99) - (priorityWeight[b.priority] ?? 99)
@@ -79,18 +77,32 @@ export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
         })
     }
     return map
-  }, [displayedTasks])
+  }, [optimisticTasks])
+
+  const filteredTasksByColumn = useMemo(() => {
+    const map: Record<string, (Task & { assignedUser?: User | null })[]> = {}
+    for (const col of columns) {
+      map[col.id] = filteredTasks
+        .filter((t) => t.status === col.id)
+        .sort((a, b) => {
+          const pw = (priorityWeight[a.priority] ?? 99) - (priorityWeight[b.priority] ?? 99)
+          if (pw !== 0) return pw
+          return a.sortOrder - b.sortOrder
+        })
+    }
+    return map
+  }, [filteredTasks])
 
   const findColumn = useCallback((id: string): string | undefined => {
     if (columns.find((c) => c.id === id)) return id
-    const task = displayedTasks.find((t) => t.id === id)
+    const task = optimisticTasks.find((t) => t.id === id)
     return task?.status
-  }, [displayedTasks])
+  }, [optimisticTasks])
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    const task = displayedTasks.find((t) => t.id === event.active.id)
+    const task = optimisticTasks.find((t) => t.id === event.active.id)
     if (task) setActiveTask(task)
-  }, [displayedTasks])
+  }, [optimisticTasks])
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const { active, over } = event
@@ -131,25 +143,41 @@ export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
 
     const newStatus = overCol as "TODO" | "IN_PROGRESS" | "DONE"
 
-    let columnTasks = tasksByColumn[overCol]
+    // Use the original server prop to determine if the card actually changed columns
+    // (findColumn may return stale or already-flushed state depending on React batching)
+    const originalTask = tasks.find((t) => t.id === activeId)
+    const changedColumn = originalTask ? originalTask.status !== overCol : activeCol !== overCol
 
-    const activeIndex = columnTasks.findIndex((t) => t.id === activeId)
-    const overIndex = columnTasks.findIndex((t) => t.id === overId)
+    // Compute column tasks from fresh optimisticTasks, not memoized tasksByColumn
+    // (handleDragOver's state update may not have flushed yet)
+    const sortByPriorityAndOrder = (a: Task & { assignedUser?: User | null }, b: Task & { assignedUser?: User | null }) => {
+      const pw = (priorityWeight[a.priority] ?? 99) - (priorityWeight[b.priority] ?? 99)
+      if (pw !== 0) return pw
+      return a.sortOrder - b.sortOrder
+    }
 
-    let reordered: typeof columnTasks
-    if (activeCol === overCol) {
-      reordered = arrayMove(columnTasks, activeIndex, overIndex)
+    const overColumnTasks = [...optimisticTasks]
+      .filter((t) => t.status === overCol)
+      .sort(sortByPriorityAndOrder)
+
+    const activeIndex = overColumnTasks.findIndex((t) => t.id === activeId)
+    const overIndex = overColumnTasks.findIndex((t) => t.id === overId)
+
+    let reordered: (Task & { assignedUser?: User | null })[]
+    if (activeIndex >= 0) {
+      // Card already in target column (handleDragOver may have already moved it)
+      reordered = arrayMove(overColumnTasks, activeIndex, overIndex >= 0 ? overIndex : overColumnTasks.length - 1)
     } else {
-      columnTasks = tasksByColumn[overCol]
-      const movedTask = displayedTasks.find((t) => t.id === activeId)!
+      // Card not yet in target column — insert and mark status change
+      const movedTask = optimisticTasks.find((t) => t.id === activeId)!
       const updated = { ...movedTask, status: newStatus }
-      const insertAt = overIndex >= 0 ? overIndex : columnTasks.length
-      reordered = [...columnTasks.slice(0, insertAt), updated, ...columnTasks.slice(insertAt)]
+      const insertAt = overIndex >= 0 ? overIndex : overColumnTasks.length
+      reordered = [...overColumnTasks.slice(0, insertAt), updated, ...overColumnTasks.slice(insertAt)]
     }
 
     const updates = reordered.map((t, i) => ({
       id: t.id,
-      ...(activeCol !== overCol && t.id === activeId ? { status: newStatus } : {}),
+      ...(changedColumn && t.id === activeId ? { status: newStatus } : {}),
       sortOrder: i,
     }))
 
@@ -164,7 +192,7 @@ export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
     } finally {
       pendingOps.current--
     }
-  }, [displayedTasks, findColumn, tasksByColumn, tasks])
+  }, [optimisticTasks, findColumn, tasks])
 
   const hasActiveFilters = search || priorityFilter !== "all" || userFilter !== "all"
 
@@ -248,9 +276,10 @@ export function KanbanBoard({ tasks, users }: KanbanBoardProps) {
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {columns.map((column) => (
-          <KanbanColumn key={column.id} id={column.id} title={column.title} count={tasksByColumn[column.id].length}>
+          <KanbanColumn key={column.id} id={column.id} title={column.title} count={filteredTasksByColumn[column.id].length}>
+            {/* Use unfiltered items so @dnd-kit tracks every card regardless of filter state */}
             <SortableContext items={tasksByColumn[column.id].map((t) => t.id)} strategy={verticalListSortingStrategy}>
-              {tasksByColumn[column.id].map((task) => (
+              {filteredTasksByColumn[column.id].map((task) => (
                 <KanbanCard key={task.id} task={task} onEdit={setEditingTask} />
               ))}
             </SortableContext>
