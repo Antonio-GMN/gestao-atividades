@@ -1,7 +1,5 @@
 # Gestão de Atividades
 
-Ferramenta de gestão operacional para pequenas empresas com aproximadamente 10 colaboradores.
-
 ## Metodologia
 
 A solução foi inspirada principalmente em **Kanban**, complementada por conceitos de **Matriz de Eisenhower** para priorização e gestão visual do trabalho.
