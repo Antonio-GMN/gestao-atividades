@@ -22,15 +22,16 @@ interface UserWithHours {
 interface TaskInfo {
   assignedUserId: string | null
   estimatedHours: number
-  dayOfWeek: number
+  dayDistribution: [number, number, number, number, number]
 }
 
 interface TeamClientProps {
   users: UserWithHours[]
   tasks: TaskInfo[]
+  usersList: { id: string; name: string; role: string; createdAt: Date }[]
 }
 
-export function TeamClient({ users, tasks }: TeamClientProps) {
+export function TeamClient({ users, tasks, usersList }: TeamClientProps) {
   const [open, setOpen] = useState(false)
   const [chartOpen, setChartOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -113,7 +114,7 @@ export function TeamClient({ users, tasks }: TeamClientProps) {
         {filteredUsers.length} de {users.length} colaboradores
       </div>
 
-      <TeamList users={filteredUsers} />
+      <TeamList users={filteredUsers} usersList={usersList} />
 
       <Dialog open={chartOpen} onOpenChange={setChartOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">

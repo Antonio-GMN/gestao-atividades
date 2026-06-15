@@ -22,9 +22,10 @@ interface UserWithHours {
 
 interface TeamListProps {
   users: UserWithHours[]
+  usersList: { id: string; name: string; role: string; createdAt: Date }[]
 }
 
-export function TeamList({ users }: TeamListProps) {
+export function TeamList({ users, usersList }: TeamListProps) {
   const [editingUser, setEditingUser] = useState<UserWithHours | null>(null)
   const [viewingUser, setViewingUser] = useState<UserWithHours | null>(null)
   const [deletingUser, setDeletingUser] = useState<UserWithHours | null>(null)
@@ -37,7 +38,7 @@ export function TeamList({ users }: TeamListProps) {
 
   return (
     <div className="space-y-3">
-      <UserTasksDialog user={viewingUser} onClose={() => setViewingUser(null)} />
+      <UserTasksDialog user={viewingUser} onClose={() => setViewingUser(null)} usersList={usersList} />
 
       {users.map((user) => {
         const workload = getWorkload(user.totalEstimatedHours)

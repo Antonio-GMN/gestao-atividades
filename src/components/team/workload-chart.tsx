@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine,
-  CartesianGrid, ResponsiveContainer, Cell, Legend,
+  CartesianGrid, ResponsiveContainer, Cell,
 } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,7 @@ interface UserWithHours {
 interface TaskInfo {
   assignedUserId: string | null
   estimatedHours: number
-  dayOfWeek: number
+  dayDistribution: [number, number, number, number, number]
 }
 
 interface WorkloadChartProps {
@@ -26,7 +26,7 @@ interface WorkloadChartProps {
   tasks: TaskInfo[]
 }
 
-type ChartView = "bars" | "weekdays" | "heatmap"
+type ChartView = "bars" | "heatmap"
 
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 const WORK_DAYS = [1, 2, 3, 4, 5]
@@ -68,24 +68,13 @@ export function WorkloadChart({ users, tasks }: WorkloadChartProps) {
       if (!task.assignedUserId) continue
       const user = users.find((u) => u.id === task.assignedUserId)
       if (!user) continue
-      const workDay = task.dayOfWeek === 0 || task.dayOfWeek === 6
-        ? (task.dayOfWeek === 0 ? 1 : 5)
-        : task.dayOfWeek
-      byDay[workDay][user.name] = (byDay[workDay][user.name] ?? 0) + task.estimatedHours
+      for (let i = 0; i < 5; i++) {
+        byDay[i + 1][user.name] += task.dayDistribution[i]
+      }
     }
+
     return byDay
   }, [tasks, users])
-
-  const weekDayData = useMemo(() =>
-    WORK_DAYS.map((d) => {
-      const entry: Record<string, string | number> = { day: DAYS[d] }
-      for (const u of users) {
-        entry[u.name] = dayTasks[d][u.name] ?? 0
-      }
-      return entry
-    }),
-    [dayTasks, users]
-  )
 
   function getHeatColor(hours: number) {
     const max = Math.max(...WORK_DAYS.flatMap((d) => Object.values(dayTasks[d])), 1)
@@ -100,9 +89,6 @@ export function WorkloadChart({ users, tasks }: WorkloadChartProps) {
       <div className="flex items-center gap-2">
         <Button variant={view === "bars" ? "default" : "outline"} size="sm" onClick={() => setView("bars")}>
           Carga por Funcionário
-        </Button>
-        <Button variant={view === "weekdays" ? "default" : "outline"} size="sm" onClick={() => setView("weekdays")}>
-          Horas por Dia
         </Button>
         <Button variant={view === "heatmap" ? "default" : "outline"} size="sm" onClick={() => setView("heatmap")}>
           Heatmap
@@ -126,21 +112,6 @@ export function WorkloadChart({ users, tasks }: WorkloadChartProps) {
                 <Cell key={entry.name} fill={colors[entry.name] ?? "#3b82f6"} />
               ))}
             </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      )}
-
-      {view === "weekdays" && (
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={weekDayData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
-            <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Legend />
-            {users.map((u) => (
-              <Bar key={u.id} dataKey={u.name} stackId="a" fill={colors[u.name]} radius={[4, 4, 0, 0]} />
-            ))}
           </BarChart>
         </ResponsiveContainer>
       )}

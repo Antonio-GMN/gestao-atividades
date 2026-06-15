@@ -35,7 +35,7 @@ model Task {
   description     String?
   status          TaskStatus @default(TODO)
   priority        Priority   @default(MEDIUM)
-  startDate       DateTime?
+  startDate       DateTime  @default(now())
   dueDate         DateTime
   createdAt       DateTime   @default(now())
   assignedUserId  String?

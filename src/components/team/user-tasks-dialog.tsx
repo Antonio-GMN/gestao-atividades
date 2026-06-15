@@ -1,11 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { TaskForm } from "@/components/tasks/task-form"
 import { getUserTasks } from "@/server/actions/tasks"
 import { formatDate, formatEstimatedHours, isOverdue, isAtRisk } from "@/lib/utils"
+import { Pencil } from "lucide-react"
 import type { Task, User } from "@/generated/prisma/client"
 
 interface UserInfo {
@@ -18,6 +21,7 @@ interface UserInfo {
 interface UserTasksDialogProps {
   user: UserInfo | null
   onClose: () => void
+  usersList: { id: string; name: string; role: string; createdAt: Date }[]
 }
 
 const statusLabels: Record<string, string> = {
@@ -69,15 +73,20 @@ function getSection(task: Task & { assignedUser?: User | null }): string {
 
 const sectionOrder = ["Em Atraso", "Hoje", "Amanhã", "Esta Semana", "Próximos", "Concluídas"]
 
-export function UserTasksDialog({ user, onClose }: UserTasksDialogProps) {
+export function UserTasksDialog({ user, onClose, usersList }: UserTasksDialogProps) {
   const [tasks, setTasks] = useState<(Task & { assignedUser?: User | null })[]>([])
   const [loading, setLoading] = useState(false)
+  const [editingTask, setEditingTask] = useState<(Task & { assignedUser?: User | null }) | null>(null)
 
-  useEffect(() => {
+  const loadTasks = useCallback(() => {
     if (!user) return
     setLoading(true)
     getUserTasks(user.id).then(setTasks).finally(() => setLoading(false))
   }, [user])
+
+  useEffect(() => {
+    loadTasks()
+  }, [loadTasks])
 
   const sections = sectionOrder
     .map((section) => ({
@@ -149,11 +158,22 @@ export function UserTasksDialog({ user, onClose }: UserTasksDialogProps) {
                             <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Atrasada</Badge>
                           )}
                         </div>
+                        {task.description && (
+                          <p className="text-xs text-zinc-500 mt-1.5 line-clamp-2">{task.description}</p>
+                        )}
                       </div>
                       <div className="text-right shrink-0 text-xs text-zinc-400">
                         {task.startDate && <p>Início: {formatDate(new Date(task.startDate))}</p>}
                         <p>Prazo: {formatDate(new Date(task.dueDate))}</p>
                         <p className="mt-0.5">{formatEstimatedHours(task.estimatedHours)}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 mt-1 ml-auto"
+                          onClick={(e) => { e.stopPropagation(); setEditingTask(task) }}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -163,6 +183,19 @@ export function UserTasksDialog({ user, onClose }: UserTasksDialogProps) {
           </div>
         ))}
       </DialogContent>
+
+      <Dialog open={!!editingTask} onOpenChange={(open) => { if (!open) setEditingTask(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Atividade</DialogTitle>
+          </DialogHeader>
+          <TaskForm
+            users={usersList}
+            task={editingTask ?? undefined}
+            onClose={() => { setEditingTask(null); loadTasks() }}
+          />
+        </DialogContent>
+      </Dialog>
     </Dialog>
   )
 }
