@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { createTask, updateTask } from "@/server/actions/tasks"
-import type { Task, User } from "@/generated/prisma/client"
+import type { Task, User } from "@prisma/client"
 
 interface TaskFormProps {
   users: User[]

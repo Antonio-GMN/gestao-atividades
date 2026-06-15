@@ -13,7 +13,7 @@ import { TaskForm } from "@/components/tasks/task-form"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { reorderTasks } from "@/server/actions/tasks"
 import { Search, X } from "lucide-react"
-import type { Task, User } from "@/generated/prisma/client"
+import type { Task, User } from "@prisma/client"
 
 interface KanbanBoardProps {
   tasks: (Task & { assignedUser?: User | null })[]

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TaskForm } from "@/components/tasks/task-form"
 import { TaskList } from "@/components/tasks/task-list"
 import { Plus, Search, X } from "lucide-react"
-import type { Task, User } from "@/generated/prisma/client"
+import type { Task, User } from "@prisma/client"
 
 interface TasksClientProps {
   tasks: (Task & { assignedUser?: User | null })[]

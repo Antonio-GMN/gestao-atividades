@@ -9,7 +9,7 @@ import { TaskForm } from "./task-form"
 import { deleteTask, updateTaskStatus } from "@/server/actions/tasks"
 import { formatDate, formatEstimatedHours, isOverdue, isAtRisk } from "@/lib/utils"
 import { Pencil, Trash2, ChevronRight } from "lucide-react"
-import type { Task, User } from "@/generated/prisma/client"
+import type { Task, User } from "@prisma/client"
 
 interface TaskListProps {
   tasks: (Task & { assignedUser?: User | null })[]

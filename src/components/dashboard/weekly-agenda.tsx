@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { TaskForm } from "@/components/tasks/task-form"
 import { formatDate, formatEstimatedHours } from "@/lib/utils"
 import { AlertTriangle, ChevronLeft, ChevronRight, Pencil } from "lucide-react"
-import type { Task, User } from "@/generated/prisma/client"
+import type { Task, User } from "@prisma/client"
 
 interface WeeklyAgendaProps {
   tasks: (Task & { assignedUser?: User | null })[]

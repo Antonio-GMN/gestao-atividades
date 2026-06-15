@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { formatDate, formatEstimatedHours, isOverdue, isAtRisk } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 import { Pencil } from "lucide-react"
-import type { Task, User } from "@/generated/prisma/client"
+import type { Task, User } from "@prisma/client"
 
 interface KanbanCardProps {
   task: Task & { assignedUser?: User | null }
