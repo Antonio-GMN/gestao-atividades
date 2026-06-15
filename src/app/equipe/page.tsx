@@ -4,7 +4,7 @@ import { TeamClient } from "./client"
 export const dynamic = "force-dynamic"
 
 export default async function EquipePage() {
-  const [users, activeTasks] = await Promise.all([
+  const [users, rawTasks] = await Promise.all([
     prisma.user.findMany({
       include: {
         _count: {
@@ -19,12 +19,18 @@ export default async function EquipePage() {
     }),
     prisma.task.findMany({
       where: { assignedUserId: { not: null }, status: { not: "DONE" } },
-      select: { assignedUserId: true, estimatedHours: true },
+      select: { assignedUserId: true, estimatedHours: true, dueDate: true },
     }),
   ])
 
   const hoursMap: Record<string, number> = {}
-  for (const task of activeTasks) {
+  const tasks = rawTasks.map((t) => ({
+    assignedUserId: t.assignedUserId,
+    estimatedHours: t.estimatedHours,
+    dayOfWeek: t.dueDate.getDay(),
+  }))
+
+  for (const task of tasks) {
     if (task.assignedUserId) {
       hoursMap[task.assignedUserId] = (hoursMap[task.assignedUserId] ?? 0) + task.estimatedHours
     }
@@ -35,5 +41,5 @@ export default async function EquipePage() {
     totalEstimatedHours: hoursMap[u.id] ?? 0,
   }))
 
-  return <TeamClient users={usersWithHours} />
+  return <TeamClient users={usersWithHours} tasks={tasks} />
 }
