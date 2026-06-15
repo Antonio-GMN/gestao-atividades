@@ -186,12 +186,18 @@ model Task {
 ## Como Executar
 
 ```bash
+# Clonar o repositório
+git clone https://github.com/Antonio-GMN/gestao-atividades.git
+cd gestao-atividades
+
 # Instalar dependências
 npm install
 
 # Configurar variáveis de ambiente
 cp .env.example .env
-# Edite .env com a DATABASE_URL do seu PostgreSQL/Supabase
+# Edite .env com as credenciais do seu Supabase:
+#   DATABASE_URL → pooler transaction-mode (porta 6543) — usada pela aplicação
+#   DIRECT_URL   → pooler session-mode (porta 5432) — usada pelo Prisma Migrate
 
 # Executar migrations
 npm run prisma:migrate
