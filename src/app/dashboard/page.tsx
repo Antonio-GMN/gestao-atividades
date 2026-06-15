@@ -52,7 +52,7 @@ export default async function DashboardPage() {
 
   const overdueTasks = tasks.filter((t) => isOverdue(t.dueDate) && t.status !== "DONE")
   const riskTasks = tasks.filter((t) => isAtRisk(t.dueDate) && t.status !== "DONE" && !isOverdue(t.dueDate))
-  const overloadedUsers = users.filter((u) => (hoursMap[u.id] ?? 0) >= 24)
+  const overloadedUsers = users.filter((u) => (hoursMap[u.id] ?? 0) > 40)
 
   const weekEndDisplay = new Date(weekEnd)
   weekEndDisplay.setDate(weekEndDisplay.getDate() - 1)

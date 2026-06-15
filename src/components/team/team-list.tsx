@@ -31,7 +31,7 @@ export function TeamList({ users, usersList }: TeamListProps) {
   const [deletingUser, setDeletingUser] = useState<UserWithHours | null>(null)
 
   function getWorkload(hours: number) {
-    if (hours >= 24) return { label: "Sobrecarregado", variant: "destructive" as const, color: "text-red-500" }
+    if (hours > 40) return { label: "Sobrecarregado", variant: "destructive" as const, color: "text-red-500" }
     if (hours >= 8) return { label: "Equilibrado", variant: "success" as const, color: "text-emerald-500" }
     return { label: "Ocioso", variant: "warning" as const, color: "text-amber-500" }
   }
